@@ -1,0 +1,237 @@
+/******************************************************************************
+* Copyright (c) 2006, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+* Eduard Czimbalmos
+* Attila Balasko
+* Csaba Feher
+* Gabor Szalai
+* Kulcsár Endre
+******************************************************************************/
+//
+//  File:               SunRPCasp_PT.cc
+//  Description:        SunRPC test port RPC message & RAW coding instructions
+//  Rev:                R5A
+//  Prodnr:             CNL 113 493
+//
+
+module SunRPCasp_Types {
+
+// XDR (RFC 1014) data types
+
+type integer XDR_uint with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type record XDR_fixed_len_opaque {
+  octetstring data
+}
+
+type record XDR_void {}
+
+type record XDR_variable_len_opaque {
+  XDR_uint    len,
+  octetstring data
+} with {
+  variant (len) "LENGTHTO(data)";
+  variant (data) "PADDING(dword32)"
+}
+
+// Sun RPC (RFC 1057) data types
+
+type enumerated SunRPC_msg_type {
+  rpc_call  (0),
+  rpc_reply (1)
+} with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type enumerated SunRPC_auth_flavor {
+  auth_null  (0),
+  auth_unix  (1),
+  auth_short (2),
+  auth_des   (3)
+} with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type record SunRPC_opaque_auth {
+  SunRPC_auth_flavor       flavor,
+  XDR_variable_len_opaque  body
+}
+
+type record SunRPC_call_body {
+  XDR_uint rpcvers,
+  XDR_uint prog,
+  XDR_uint vers,
+  XDR_uint proc,
+  SunRPC_opaque_auth cred,
+  SunRPC_opaque_auth verf,
+  octetstring proc_spec_parameters optional
+}
+
+type enumerated SunRPC_reply_stat {
+  msg_accepted (0),
+  msg_denied   (1)
+} with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type record SunRPC_reply_body {
+  SunRPC_reply_stat stat,
+  SunRPC_reply_union reply_data
+} with {
+  variant (reply_data) "CROSSTAG( areply, stat = msg_accepted;
+                                    rreply, stat = msg_denied)";
+};
+
+type enumerated SunRPC_accept_stat {
+  success       (0),
+  prog_unavail  (1),
+  prog_mismatch (2),
+  proc_unavail  (3),
+  garbage_args  (4)
+} with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type record SunRPC_mismatch_info {
+  XDR_uint low,
+  XDR_uint high
+}
+
+type union SunRPC_accepted_reply_data {
+  XDR_fixed_len_opaque  results,
+  SunRPC_mismatch_info  mismatch_info,
+  XDR_void              void
+}
+
+type record SunRPC_accepted_reply {
+  SunRPC_opaque_auth          verf,
+  SunRPC_accept_stat          stat,
+  SunRPC_accepted_reply_data  reply_data
+} with {
+  variant (reply_data) "CROSSTAG(results,       stat = success;
+                                   mismatch_info, stat = prog_mismatch;
+                                   void,          OTHERWISE)";
+}
+
+type enumerated SunRPC_reject_stat {
+  rpc_mismatch (0),
+  auth_error   (1)
+} with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type union SunRPC_rejected_reply_data {
+  SunRPC_mismatch_info mismatch_info, 
+  SunRPC_auth_stat     auth_stat
+}
+
+type enumerated SunRPC_auth_stat {
+  auth_badcred      (1),
+  auth_rejectedcred (2),
+  auth_badverf      (3),
+  auth_rejectedverf (4),
+  auth_tooweak      (5)
+} with {
+  variant "FIELDLENGTH(32)";
+  variant "BYTEORDER(last)";
+}
+
+type record SunRPC_rejected_reply {
+  SunRPC_reject_stat         stat,
+  SunRPC_rejected_reply_data reply_data
+} with {
+  variant (reply_data) "CROSSTAG( mismatch_info, stat = rpc_mismatch;
+                                    auth_stat,     stat = auth_error)";
+}
+
+type union SunRPC_reply_union {
+  SunRPC_accepted_reply areply,
+  SunRPC_rejected_reply rreply
+}
+
+type union SunRPC_body {
+  SunRPC_call_body  cbody,
+  SunRPC_reply_body rbody
+}
+
+type record SunRPC_message {
+  octetstring      xid length(4),
+  SunRPC_msg_type  msg_type,
+  SunRPC_body      body
+} with {
+  variant (xid) "FIELDLENGTH(4)";
+  variant (body) "CROSSTAG( cbody, msg_type = rpc_call;
+                              rbody, msg_type = rpc_reply)"
+}
+
+type record SunRPC_message_multiple_client {
+  integer         client_id optional,
+  SunRPC_message  rpc_msg
+}
+
+/*
+ * TCP connection handling ASPs
+ */
+
+// Client connect ASP. Initiates a new connection towards a server.
+// Check for ASP_SunRPC_Connected!
+type record ASP_SunRPC_Connect {
+  charstring hostname,
+  integer portnumber (1..65535),
+  charstring local_hostname optional,
+  integer local_portnumber (1..65535) optional
+};
+
+// Received by the client after ASP_SunRPC_Connect is sent.
+// The client_id will be filled with -1 if unsuccessful.
+// Returned client_id shall be used to distinguish between the open connections.
+type record ASP_SunRPC_Connect_result {
+  integer client_id
+}
+
+// Received when the server has accepted an incoming connection.
+type record ASP_SunRPC_Connected {
+  charstring hostname,
+  integer portnumber (1..65535),
+  integer client_id
+};
+  
+// Closes all connections, or the specified one only.
+// client_id = omit means close all connections.
+type record ASP_SunRPC_Close {
+  integer client_id optional
+};
+
+// Shuts down the current listening port and listens on the specified port.
+// In case of omit will use the configured port, else random.
+// portnumber = omit means random port number -> check for ASP_SunRPC_Listen_result!
+type record ASP_SunRPC_Listen {
+  integer portnumber (1..65535) optional,
+  charstring local_hostname optional
+};
+
+// Received after Listen. Sends back the choosen listening port.
+type record ASP_SunRPC_Listen_result {
+  integer portnumber (1..65535)
+};
+
+// Close server listening port, but leave all current connections open.
+type record ASP_SunRPC_Shutdown {};
+
+
+} with {
+  encode "RAW";
+  }

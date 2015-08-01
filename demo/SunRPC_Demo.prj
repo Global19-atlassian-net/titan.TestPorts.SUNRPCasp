@@ -1,0 +1,42 @@
+<!DOCTYPE TITAN_GUI_project_file>
+<Project>
+    <General>
+        <Project_Name>SunRPC_Demo</Project_Name>
+        <Executable_Path>../bin/SunRPC_Demo</Executable_Path>
+        <Working_Dir>../bin</Working_Dir>
+        <Build_Host>alpha</Build_Host>
+        <Execution_Mode>Parallel</Execution_Mode>
+        <Log_Format>yes</Log_Format>
+        <Update_Symlinks>yes</Update_Symlinks>
+        <Create_Absolute_Symlinks>yes</Create_Absolute_Symlinks>
+        <Update_Makefile>yes</Update_Makefile>
+        <Localhost_Execute>yes</Localhost_Execute>
+        <Execute_Command>rsh %host &quot;cd %project_working_dir ; &quot;%executable&quot; %localhost %mctr_port&quot;</Execute_Command>
+        <Execute_Hosts>alfa, beta, gamma</Execute_Hosts>
+        <UnUsed_List></UnUsed_List>
+    </General>
+    <Modules>
+        <Module>../src/SunRPCasp_PortType.ttcn</Module>
+        <Module>../src/SunRPCasp_Types.ttcn</Module>
+        <Module>SunRPC_Demo.ttcn</Module>
+        <Module>../../TCPasp_CNL113347/src/TCPasp_PortType.ttcn</Module>
+        <Module>../../TCPasp_CNL113347/src/TCPasp_Types.ttcn</Module>
+    </Modules>
+    <TestPorts>
+        <TestPort>../src/SunRPCasp_PT.cc</TestPort>
+        <TestPort>../src/SunRPCasp_PT.hh</TestPort>
+        <TestPort>../../TCPasp_CNL113347/src/TCPasp_PT.cc</TestPort>
+        <TestPort>../../TCPasp_CNL113347/src/TCPasp_PT.hh</TestPort>
+    </TestPorts>
+    <Other_Sources>
+        <Other_Source>../../Common_Components/Abstract_Socket_CNL113384/src/Abstract_Socket.cc</Other_Source>
+        <Other_Source>../../Common_Components/Abstract_Socket_CNL113384/src/Abstract_Socket.hh</Other_Source>
+    </Other_Sources>
+    <Configs>
+        <Config>SunRPC.cfg</Config>
+    </Configs>
+    <Test_Cases>
+        <Test_Case>SunRPC_Demo.tc_both_client_server</Test_Case>
+        <Test_Case>SunRPC_Demo.tc_TCP_client_RPC_server_RPC_decode_test</Test_Case>
+    </Test_Cases>
+</Project>

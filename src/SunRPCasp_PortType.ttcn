@@ -1,0 +1,52 @@
+/******************************************************************************
+* Copyright (c) 2006, 2015  Ericsson AB
+* All rights reserved. This program and the accompanying materials
+* are made available under the terms of the Eclipse Public License v1.0
+* which accompanies this distribution, and is available at
+* http://www.eclipse.org/legal/epl-v10.html
+*
+* Contributors:
+* Eduard Czimbalmos
+* Attila Balasko
+* Csaba Feher
+* Gabor Szalai
+* Kulcsár Endre
+******************************************************************************/
+//
+//  File:               SunRPCasp_PortType.ttcn
+//  Description:        SunRPC test port type definition
+//  Rev:                R5A
+//  Prodnr:             CNL 113 493
+//
+
+module SunRPCasp_PortType
+{
+
+//=========================================================================
+// Import Part
+//=========================================================================
+
+import from SunRPCasp_Types all;
+
+//=========================================================================
+//Port Types
+//=========================================================================
+
+type port SunRPCasp_PT message
+{
+  // sent/received when 1 connection is present at a time
+  inout SunRPC_message;
+  // sent/received when more than 1 connection is present at a time
+  inout SunRPC_message_multiple_client;
+
+  // TCP ASPs
+  out   ASP_SunRPC_Connect;
+  in    ASP_SunRPC_Connect_result;
+  in    ASP_SunRPC_Connected;
+  inout ASP_SunRPC_Close;
+  out   ASP_SunRPC_Listen;
+  in    ASP_SunRPC_Listen_result;
+  out   ASP_SunRPC_Shutdown;
+};
+
+}
