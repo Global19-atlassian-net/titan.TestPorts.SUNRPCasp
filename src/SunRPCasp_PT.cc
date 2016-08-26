@@ -15,7 +15,7 @@
 //
 //  File:               SunRPCasp_PT.cc
 //  Description:        SunRPC test port source
-//  Rev:                R5A
+//  Rev:                R5B
 //  Prodnr:             CNL 113 493
 //
 

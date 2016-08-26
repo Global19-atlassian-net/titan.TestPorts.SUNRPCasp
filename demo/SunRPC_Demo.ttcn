@@ -15,7 +15,7 @@
 //
 //  File:               SunRPC_Demo.cc
 //  Description:        SunRPC test port demo
-//  Rev:                R5A
+//  Rev:                R5B
 //  Prodnr:             CNL 113 493
 //
 module SunRPC_Demo {
